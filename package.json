@@ -1,0 +1,19 @@
+{
+  "name": "remittance",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cobyd/Remittance.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cobyd/Remittance/issues"
+  },
+  "homepage": "https://github.com/cobyd/Remittance#readme"
+}
