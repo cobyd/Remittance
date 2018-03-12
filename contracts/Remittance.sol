@@ -15,6 +15,8 @@ contract Owned {
 
 contract Cancellable is Owned {
     uint cannotCanelUntil;
+
+    event LogCancel();
     
     function Cancellable() public {
         cannotCanelUntil = block.number + 50000;
@@ -22,19 +24,8 @@ contract Cancellable is Owned {
     
     function Cancel() public ownerOnly {
         require(block.number > cannotCanelUntil);
+        emit LogCancel();
         selfdestruct(owner);
-    }
-}
-
-contract RemittanceFactory {
-    event LogNewRemittance(address indexed owner, address remittanceContract, uint value);
-    
-    function RemittanceFactory() public {}
-    
-    function createRemittance(address _approvedRecepient, bytes32 _hashword) public payable {
-        require(msg.value > 0);
-        Remittance r = new Remittance(msg.sender, _approvedRecepient, _hashword);
-        emit LogNewRemittance(msg.sender, r, msg.value);
     }
 }
 
@@ -42,18 +33,19 @@ contract Remittance is Cancellable {
     address recepient;
     bytes32 hashword;
     
-    event LogReceipt(uint block);
+    event LogNewRemittance(address indexed owner, address indexed recepient, address remittanceContract, uint value);
+    event LogReceipt();
     
-    function Remittance(address _owner, address _approvedRecepient, bytes32 _hashword) public payable {
-        owner = _owner;
+    function Remittance(address _approvedRecepient, bytes32 _hashword) public payable {
         recepient = _approvedRecepient;
         hashword = _hashword;
+        emit LogNewRemittance(owner, _approvedRecepient, this, msg.value);
     }
     
     function receive(bytes32 _password) public {
         require(keccak256(_password) == hashword);
         require(msg.sender == recepient);
-        emit LogReceipt(block.number);
+        emit LogReceipt();
         selfdestruct(recepient);
     }
 }
