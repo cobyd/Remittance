@@ -30,22 +30,22 @@ contract Cancellable is Owned {
 }
 
 contract Remittance is Cancellable {
-    address recepient;
-    bytes32 hashword;
+    address public recipient;
+    bytes32 public hashword;
     
-    event LogNewRemittance(address indexed owner, address indexed recepient, address remittanceContract, uint value);
+    event LogNewRemittance(address indexed owner, address indexed recipient, address remittanceContract, uint value);
     event LogReceipt();
     
-    function Remittance(address _approvedRecepient, bytes32 _hashword) public payable {
-        recepient = _approvedRecepient;
+    function Remittance(address _approvedRecipient, bytes32 _hashword) public payable {
+        recipient = _approvedRecipient;
         hashword = _hashword;
-        emit LogNewRemittance(owner, _approvedRecepient, this, msg.value);
+        emit LogNewRemittance(owner, _approvedRecipient, this, msg.value);
     }
     
-    function receive(bytes32 _password) public {
+    function receive(bytes _password) public {
         require(keccak256(_password) == hashword);
-        require(msg.sender == recepient);
+        require(msg.sender == recipient);
         emit LogReceipt();
-        selfdestruct(recepient);
+        selfdestruct(recipient);
     }
 }
