@@ -53,4 +53,20 @@ describe("Remittance", () => {
     let endingBalance = await web3.eth.getBalance(accounts[2]);
     assert(endingBalance > startingBalance, "Withdrawl failed");
   });
+  it("Cannot create a new remittance with a used key", async () => {
+    await remittance.methods
+      .createRemittance(accounts[2], hashword)
+      .send({ from: accounts[1], gas: "1000000", value: oneFinney });
+    await remittance.methods
+      .receive(web3.utils.toHex(password))
+      .send({ from: accounts[2], gas: "1000000" });
+    try {
+      await remittance.methods
+        .createRemittance(accounts[2], hashword)
+        .send({ from: accounts[1], gas: "1000000", value: oneFinney });
+      assert(false, "Should throw in transaction");
+    } catch (e) {
+      assert(e);
+    }
+  });
 });
