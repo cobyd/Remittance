@@ -7,9 +7,13 @@ const fs = require("fs-extra");
 //   "contracts",
 //   "RemittanceFactory.sol"
 // );
-const remittancePath = path.resolve(__dirname, "contracts", "Remittance.sol");
+const remittancePath = path.resolve(
+  __dirname,
+  "contracts",
+  "RemittanceManager.sol"
+);
 
 // const remittanceFactorySrc = fs.readFileSync(remittanceFactoryPath, "utf8");
 const remittanceSrc = fs.readFileSync(remittancePath, "utf8");
 
-module.exports = solc.compile(remittanceSrc, 1).contracts[":Remittance"];
+module.exports = solc.compile(remittanceSrc, 1).contracts[":RemittanceManager"];
