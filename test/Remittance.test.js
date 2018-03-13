@@ -18,13 +18,11 @@ beforeEach(async () => {
   accounts = await web3.eth.getAccounts();
   remittance = await new web3.eth.Contract(JSON.parse(interface))
     .deploy({
-      data: bytecode,
-      arguments: [accounts[1], hashword]
+      data: bytecode
     })
     .send({
       from: accounts[0],
-      gas: "1000000",
-      value: oneFinney
+      gas: "1000000"
     });
   remittance.setProvider(provider);
 });
@@ -33,21 +31,26 @@ describe("Remittance", () => {
   it("Successfully deploys", () => {
     assert.ok(remittance.options.address);
   });
-  it("Has the correct balance", async () => {
-    let balance = await web3.eth.getBalance(remittance.options.address);
-    assert.equal(balance, oneFinney);
+  it("Creates a remittance", async () => {
+    let tx = await remittance.methods
+      .createRemittance(accounts[2], hashword)
+      .send({ from: accounts[1], gas: "1000000", value: oneFinney });
+    let r = await remittance.methods
+      .getRemittance(accounts[2], hashword)
+      .call();
+    assert.equal(r[0], accounts[1]);
+    assert.equal(r[1], accounts[2]);
+    assert.equal(r[2], "950000000000000");
   });
-  it("Distributes ether to the recipient", async () => {
-    let startingAccountBalance = await web3.eth.getBalance(accounts[1]);
+  it("Can withdraw", async () => {
+    let startingBalance = await web3.eth.getBalance(accounts[2]);
+    await remittance.methods
+      .createRemittance(accounts[2], hashword)
+      .send({ from: accounts[1], gas: "1000000", value: oneFinney });
     await remittance.methods
       .receive(web3.utils.toHex(password))
-      .send({ from: accounts[1], gas: "1000000" });
-    let contractBalance = await web3.eth.getBalance(remittance.options.address);
-    let finalAccountBalance = await web3.eth.getBalance(accounts[1]);
-    assert.equal(contractBalance, 0);
-    assert(
-      finalAccountBalance > startingAccountBalance,
-      "Funds were not received"
-    );
+      .send({ from: accounts[2], gas: "1000000" });
+    let endingBalance = await web3.eth.getBalance(accounts[2]);
+    assert(endingBalance > startingBalance, "Withdrawl failed");
   });
 });
