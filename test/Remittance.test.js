@@ -12,8 +12,6 @@ let hashword;
 let oneFinney;
 
 beforeEach(async () => {
-  password = "the_password";
-  hashword = web3.utils.keccak256(web3.utils.toHex(password));
   oneFinney = web3.utils.toWei("1", "finney");
   accounts = await web3.eth.getAccounts();
   remittance = await new web3.eth.Contract(JSON.parse(interface))
@@ -25,6 +23,8 @@ beforeEach(async () => {
       gas: "1000000"
     });
   remittance.setProvider(provider);
+  password = "the_password";
+  hashword = await remittance.methods.keccackHash(accounts[2], password).call();
 });
 
 describe("Remittance", () => {
@@ -35,9 +35,7 @@ describe("Remittance", () => {
     let tx = await remittance.methods
       .createRemittance(accounts[2], hashword)
       .send({ from: accounts[1], gas: "1000000", value: oneFinney });
-    let r = await remittance.methods
-      .getRemittance(accounts[2], hashword)
-      .call();
+    let r = await remittance.methods.remittances(hashword).call();
     assert.equal(r[0], accounts[1]);
     assert.equal(r[1], accounts[2]);
     assert.equal(r[2], "950000000000000");
@@ -48,7 +46,7 @@ describe("Remittance", () => {
       .createRemittance(accounts[2], hashword)
       .send({ from: accounts[1], gas: "1000000", value: oneFinney });
     await remittance.methods
-      .receive(web3.utils.toHex(password))
+      .receive(password)
       .send({ from: accounts[2], gas: "1000000" });
     let endingBalance = await web3.eth.getBalance(accounts[2]);
     assert(endingBalance > startingBalance, "Withdrawl failed");
@@ -58,7 +56,7 @@ describe("Remittance", () => {
       .createRemittance(accounts[2], hashword)
       .send({ from: accounts[1], gas: "1000000", value: oneFinney });
     await remittance.methods
-      .receive(web3.utils.toHex(password))
+      .receive(password)
       .send({ from: accounts[2], gas: "1000000" });
     try {
       await remittance.methods

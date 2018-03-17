@@ -30,8 +30,7 @@ contract RemittanceManager is Owned {
     
     function createRemittance(address _approvedRecipient, bytes32 _hashword) public payable {
         require(msg.value > 0);
-        bytes32 key = keccak256(_approvedRecipient, _hashword);
-        require(remittances[key].sender == 0);
+        require(remittances[_hashword].sender == 0);
         uint ownerCut = msg.value / 20;
         uint remittanceValue = msg.value - ownerCut;
         Remittance memory r = Remittance({
@@ -40,9 +39,9 @@ contract RemittanceManager is Owned {
             value: remittanceValue,
             cancelAvailableAfter: block.number + 50000
         });
-        remittances[key] = r;
+        remittances[_hashword] = r;
         owner.transfer(ownerCut);
-        emit LogKey(key);
+        emit LogKey(_hashword);
         emit LogNewRemittance(owner, _approvedRecipient, this, msg.value);
     }
 
@@ -55,18 +54,18 @@ contract RemittanceManager is Owned {
         msg.sender.transfer(value);
     }
     
-    function receive(bytes _password) public {
-        bytes32 key = keccak256(msg.sender, keccak256(_password));
+    function receive(string _password) public {
+        bytes32 key = keccackHash(msg.sender, _password);
         uint value = remittances[key].value;
         require(value > 0);
         remittances[key].value = 0;
         emit LogReceipt(msg.sender);
-        msg.sender.transfer(value);
+        remittances[key].recipient.transfer(value);
     }
 
-    function getRemittance(address _recipient, bytes _hashword) public view returns(address, address, uint) {
-        bytes32 key = keccak256(_recipient, _hashword);
-        Remittance memory r = remittances[key];
-        return(r.sender, r.recipient, r.value);
+    // used by client to generate hash to initialize remittance
+    function keccackHash(address _recipient, string _password) public pure returns(bytes32) {
+        require(_recipient != 0);
+        return keccak256(_recipient, _password);
     }
 }
